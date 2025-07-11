@@ -4,6 +4,7 @@ const {
   GatewayIntentBits,
   Events,
   PermissionFlagsBits,
+  Partials,
 } = require("discord.js");
 
 const client = new Client({
@@ -14,6 +15,8 @@ const client = new Client({
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMessageReactions,
   ],
+  // Enable partials so the bot can receive events for uncached messages/reactions
+  partials: [Partials.Message, Partials.Channel, Partials.Reaction],
 });
 
 const STEP1_ROLE_ID = process.env.STEP1_ROLE_ID || "1390095381618102312";
@@ -85,6 +88,11 @@ client.on(Events.MessageReactionAdd, async (reaction, user) => {
   try {
     if (reaction.partial) {
       await reaction.fetch();
+    }
+
+    // Ensure the reaction's message is fully fetched if it is partial
+    if (reaction.message.partial) {
+      await reaction.message.fetch();
     }
 
     if (reaction.message.channel.id !== ARTICLE_CHANNEL_ID) return;
